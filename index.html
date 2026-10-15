@@ -151,6 +151,41 @@
       border-bottom: 1px solid var(--border);
     }
 
+
+    .status-message {
+      margin: 16px 0 0;
+      padding: 14px 16px;
+      border-radius: 10px;
+      line-height: 1.65;
+    }
+    .status-message.error {
+      color: #8f2929;
+      background: #fff0f0;
+      border: 1px solid #efcaca;
+    }
+    .status-message.success {
+      color: #245b45;
+      background: #edf8f0;
+      border: 1px solid #c8e7d1;
+    }
+    .status-message h2 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+    }
+    .status-message p { margin: 4px 0; }
+    .status-message ul {
+      margin: 6px 0 0;
+      padding-left: 1.3em;
+      border: 0;
+    }
+    .status-message li {
+      display: list-item;
+      padding: 2px 0;
+      border: 0;
+      list-style: disc;
+    }
+    .status-message[hidden] { display: none; }
+
     .footer {
       display: flex;
       justify-content: space-between;
@@ -201,6 +236,7 @@
 
     <ul id="item-list" aria-label="持ち物一覧"></ul>
     <div id="empty-message" class="empty">持ち物を入力して追加してください。</div>
+    <section id="status-message" class="status-message" role="status" aria-live="polite" hidden></section>
 
     <div class="footer">
       <span class="hint">チェックを入れると、項目に取り消し線が付きます。</span>
@@ -232,6 +268,7 @@
     const emptyMessage = document.getElementById("empty-message");
     const progress = document.getElementById("progress");
     const resetButton = document.getElementById("reset-button");
+    const statusMessage = document.getElementById("status-message");
 
     function render() {
       list.replaceChildren();
@@ -271,6 +308,36 @@
       progress.textContent = `${checkedCount} / ${items.length} 件チェック済み`;
       emptyMessage.hidden = items.length > 0;
       list.hidden = items.length === 0;
+
+      const uncheckedItems = items.filter(item => !item.checked);
+      statusMessage.replaceChildren();
+      statusMessage.className = "status-message";
+
+      if (items.length > 0 && uncheckedItems.length > 0) {
+        statusMessage.classList.add("error");
+        const heading = document.createElement("h2");
+        heading.textContent = `未チェックの項目があります（${uncheckedItems.length}件）`;
+        const message = document.createElement("p");
+        message.textContent = "次の持ち物を確認してください：";
+        const uncheckedList = document.createElement("ul");
+        for (const item of uncheckedItems) {
+          const entry = document.createElement("li");
+          entry.textContent = item.text;
+          uncheckedList.append(entry);
+        }
+        statusMessage.append(heading, message, uncheckedList);
+        statusMessage.hidden = false;
+      } else if (items.length > 0 && uncheckedItems.length === 0) {
+        statusMessage.classList.add("success");
+        const heading = document.createElement("h2");
+        heading.textContent = "他に必要なものがないか考えてみましょう。";
+        const message = document.createElement("p");
+        message.textContent = "準備は万全ですか？";
+        statusMessage.append(heading, message);
+        statusMessage.hidden = false;
+      } else {
+        statusMessage.hidden = true;
+      }
     }
 
     form.addEventListener("submit", event => {
